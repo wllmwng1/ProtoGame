@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GridNode
 {
+    //Represents a single node on the grid and its neighbours.
+
     private Vector2 position;
     private List<GridNode> neighbours;
 

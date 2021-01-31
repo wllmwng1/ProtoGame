@@ -1,11 +1,25 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class GridMap : MonoBehaviour
 {
+    //Represents the gridMap based system on which we will be working on.
+    public TileBase tile;
     private Dictionary<Vector2, GridNode> nodes = new Dictionary<Vector2, GridNode>();
 
+    public GridNode[] getGridNodes()
+    {
+        List<GridNode> temp = new List<GridNode>();
+        foreach (GridNode node in nodes.Values)
+        {
+            temp.Add(node);
+        }
+        return temp.ToArray();
+    }
+
+    //Creates a rectangular GridMap with nodes based on length and width provided
     public void createDefinedMap(int length, int width)
     {
         for (int x = 0; x < length; x++)
@@ -16,7 +30,13 @@ public class GridMap : MonoBehaviour
             }
         }
 
-        foreach (KeyValuePair<Vector2,GridNode> kvp in nodes)
+        this.assignNeighbours(nodes);
+    }
+
+    //Assigns neighbours to the nodes.
+    private void assignNeighbours(Dictionary<Vector2,GridNode> nodes)
+    {
+        foreach (KeyValuePair<Vector2, GridNode> kvp in nodes)
         {
             if (nodes.ContainsKey(kvp.Key + Vector2.right))
             {
@@ -37,13 +57,22 @@ public class GridMap : MonoBehaviour
         }
     }
 
-    public GridNode[] getGridNodes()
+    //Draws the gridMap onto the scene using the provided TileBase tile.
+    public void drawNodes()
     {
-        List<GridNode> temp = new List<GridNode>();
+        GameObject gameObj = new GameObject("GridMap");
+        gameObj.AddComponent<TilemapRenderer>();
+        var tilemap = gameObj.GetComponent<Tilemap>();
+        gameObj.transform.SetParent(gameObject.transform);
         foreach (GridNode node in nodes.Values)
         {
-            temp.Add(node);
+            tilemap.SetTile(new Vector3Int((int)node.Position.x,(int)node.Position.y,0),tile);
         }
-        return temp.ToArray();
+    }
+
+    void Start()
+    {
+        this.createDefinedMap(2, 5);
+        this.drawNodes();
     }
 }
