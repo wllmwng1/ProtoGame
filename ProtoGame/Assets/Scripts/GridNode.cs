@@ -17,11 +17,20 @@ public class GridNode
         position = _position;
         neighbours = new List<GridNode>();
     }
+
     public void addNeighbour(GridNode neighbour)
     {
         if (!neighbours.Contains(neighbour))
         {
             neighbours.Add(neighbour);
+        }
+    }
+
+    public void removeNeighbour(GridNode neighbour)
+    {
+        if (neighbours.Contains(neighbour))
+        {
+            neighbours.Remove(neighbour);
         }
     }
 }

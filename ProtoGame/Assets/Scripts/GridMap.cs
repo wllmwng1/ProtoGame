@@ -33,6 +33,59 @@ public class GridMap : MonoBehaviour
         this.assignNeighbours(nodes);
     }
 
+    //Creates a GridMap with nodes based on the tilemap given. Will fill whole tilemap.
+    public void createDefinedMap(Tilemap tilemap)
+    {
+        BoundsInt bounds = tilemap.cellBounds;
+        foreach (Vector3Int pos in tilemap.cellBounds.allPositionsWithin)
+        {
+            Vector3Int tilepos = new Vector3Int(pos.x, pos.y, pos.z);
+            if (tilemap.HasTile(tilepos))
+            {
+                nodes.Add(new Vector2(pos.x, pos.y), new GridNode(new Vector2(pos.x, pos.y)));
+            }
+        }
+    }
+
+    public void removeNodes(int x, int y)
+    {
+        Vector2 loc = new Vector2(x, y);
+        List<GridNode> removed = new List<GridNode>();
+        removed.Add(nodes[loc]);
+        nodes.Remove(loc);
+        this.removeNeighbours(removed);
+    }
+
+    public void removeNodes(int length, int width, int a, int b)
+    {
+        List<GridNode> removed = new List<GridNode>();
+        for (int x = 0; x < length; x++)
+        {
+            for (int y = 0; y < width; y++)
+            {
+                removed.Add(nodes[new Vector2(x + a, y + b)]);
+                nodes.Remove(new Vector2(x, y));
+            }
+        }
+        this.removeNeighbours(removed);
+    }
+
+    public void removeNodes(Tilemap tilemap)
+    {
+        List<GridNode> removed = new List<GridNode>();
+        BoundsInt bounds = tilemap.cellBounds;
+        foreach (Vector3Int pos in tilemap.cellBounds.allPositionsWithin)
+        {
+            Vector3Int tilepos = new Vector3Int(pos.x, pos.y, pos.z);
+            if (tilemap.HasTile(tilepos))
+            {
+                removed.Add(nodes[new Vector2(pos.x,pos.y)]);
+                nodes.Remove(new Vector2(pos.x,pos.y));
+            }
+        }
+        this.removeNeighbours(removed);
+    }
+
     //Assigns neighbours to the nodes.
     private void assignNeighbours(Dictionary<Vector2,GridNode> nodes)
     {
@@ -57,6 +110,17 @@ public class GridMap : MonoBehaviour
         }
     }
 
+    private void removeNeighbours(List<GridNode> nodes)
+    {
+        foreach (GridNode node in nodes)
+        {
+            foreach (GridNode neighbour in node.Neighbours)
+            {
+                neighbour.removeNeighbour(node);
+            }
+        }
+    }
+
     //Draws the gridMap onto the scene using the provided TileBase tile.
     public void drawNodes()
     {
@@ -70,9 +134,22 @@ public class GridMap : MonoBehaviour
         }
     }
 
+    public void resetNodes()
+    {
+        GameObject gameObj = GameObject.Find("GridMap");
+        Destroy(gameObj);
+        nodes = new Dictionary<Vector2, GridNode>();
+    }
+
     void Start()
     {
-        this.createDefinedMap(2, 5);
+        GameObject map = GameObject.Find("Map");
+        GameObject obstacle = GameObject.Find("Obstacle");
+        Tilemap tilemap = map.GetComponent<Tilemap>();
+        Tilemap obstaclemap = obstacle.GetComponent<Tilemap>();
+        this.createDefinedMap(tilemap);
+        removeNodes(obstaclemap);
         this.drawNodes();
+        //resetNodes();
     }
 }
