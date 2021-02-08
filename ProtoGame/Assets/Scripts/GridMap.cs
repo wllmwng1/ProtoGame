@@ -7,9 +7,9 @@ public class GridMap : MonoBehaviour
 {
     //Represents the gridMap based system on which we will be working on.
     public TileBase tile;
-    private Dictionary<Vector2, GridNode> nodes = new Dictionary<Vector2, GridNode>();
+    private static Dictionary<Vector2, GridNode> nodes = new Dictionary<Vector2, GridNode>();
 
-    public GridNode[] getGridNodes()
+    public static GridNode[] getGridNodes()
     {
         List<GridNode> temp = new List<GridNode>();
         foreach (GridNode node in nodes.Values)
@@ -51,8 +51,11 @@ public class GridMap : MonoBehaviour
     {
         Vector2 loc = new Vector2(x, y);
         List<GridNode> removed = new List<GridNode>();
-        removed.Add(nodes[loc]);
-        nodes.Remove(loc);
+        if (nodes.ContainsKey(new Vector2(x, y)))
+        {
+            removed.Add(nodes[loc]);
+            nodes.Remove(loc);
+        }
         this.removeNeighbours(removed);
     }
 
@@ -63,8 +66,11 @@ public class GridMap : MonoBehaviour
         {
             for (int y = 0; y < width; y++)
             {
-                removed.Add(nodes[new Vector2(x + a, y + b)]);
-                nodes.Remove(new Vector2(x, y));
+                if (nodes.ContainsKey(new Vector2(x,y)))
+                {
+                    removed.Add(nodes[new Vector2(x + a, y + b)]);
+                    nodes.Remove(new Vector2(x, y));
+                }
             }
         }
         this.removeNeighbours(removed);
@@ -77,7 +83,7 @@ public class GridMap : MonoBehaviour
         foreach (Vector3Int pos in tilemap.cellBounds.allPositionsWithin)
         {
             Vector3Int tilepos = new Vector3Int(pos.x, pos.y, pos.z);
-            if (tilemap.HasTile(tilepos))
+            if (tilemap.HasTile(tilepos) && nodes.ContainsKey(new Vector2(pos.x, pos.y)))
             {
                 removed.Add(nodes[new Vector2(pos.x,pos.y)]);
                 nodes.Remove(new Vector2(pos.x,pos.y));
