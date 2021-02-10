@@ -19,6 +19,18 @@ public class GridMap : MonoBehaviour
         return temp.ToArray();
     }
 
+    public static GridNode getGridNode(Vector2 position)
+    {
+        foreach (GridNode node in nodes.Values)
+        {
+            if (node.Position == position)
+            {
+                return node;
+            }
+        }
+        return null;
+    }
+
     //Creates a rectangular GridMap with nodes based on length and width provided
     public void createDefinedMap(int length, int width)
     {
@@ -45,6 +57,7 @@ public class GridMap : MonoBehaviour
                 nodes.Add(new Vector2(pos.x, pos.y), new GridNode(new Vector2(pos.x, pos.y)));
             }
         }
+        this.assignNeighbours(nodes);
     }
 
     public void removeNodes(int x, int y)

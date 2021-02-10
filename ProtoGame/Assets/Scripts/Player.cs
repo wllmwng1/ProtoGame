@@ -4,9 +4,33 @@ using UnityEngine;
 
 public class Player : Agent
 {
+    private List<GridNode> targetPath;
+    private GridNode startNode, targetNode;
+    private float movementSpeed = 0.01f;
+    private float timeToReachTarget = 1.0f;
+    private float t = 0.0f;
+
+
     override public void Movement()
     {
-        
+        if (targetNode != null)
+        {
+            t += Time.deltaTime / timeToReachTarget;
+            gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, targetNode.Position + new Vector2(0.5f, 0.5f), t);
+            if (t >= 1.0f)
+            {
+                if (targetPath.Count > 0)
+                {
+                    targetNode = targetPath[targetPath.Count - 1];
+                    targetPath.RemoveAt(targetPath.Count - 1);
+                }
+                else
+                {
+                    targetNode = null;
+                }
+                t = 0.0f;
+            }
+        }
     }
 
     override public void Action()
@@ -27,8 +51,27 @@ public class Player : Agent
             Vector3 mousePosition = Input.mousePosition;
             mousePosition.z = Camera.main.nearClipPlane;
             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(mousePosition);
-            Vector2 adjustedPosition = new Vector2(Mathf.Floor(worldPosition.x)+0.5f, Mathf.Floor(worldPosition.y)+0.5f);
-            gameObject.transform.position = adjustedPosition;
+            Vector2 adjustedPosition = new Vector2(Mathf.Floor(worldPosition.x), Mathf.Floor(worldPosition.y));
+            Vector2 startPos = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
+            GridNode start = GridMap.getGridNode(startPos);
+            GridNode end = GridMap.getGridNode(adjustedPosition);
+            if (end != null)
+            {
+                targetPath = AStar.getPath(start, end);
+                //gameObject.transform.position = adjustedPosition;
+                startNode = start;
+                targetNode = targetPath[targetPath.Count - 1];
+                targetPath.RemoveAt(targetPath.Count - 1);
+            }
+            //Debug.Log(targetNode.Position);
+            //foreach (GridNode node in targetPath)
+            //{
+            //   Debug.Log(node.Position);
+            //}
+            //Debug.Log("End: " + end.Position);
+            //gameObject.transform.position = adjustedPosition + new Vector2(0.5f,0.5f);
+            
         }
+        Movement();
     }
 }

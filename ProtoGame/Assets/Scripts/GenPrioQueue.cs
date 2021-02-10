@@ -7,10 +7,10 @@ public class GenericPriorityQueue<T>
 {
     private class GenericPriorityQueueNode
     {
-        public int priority;
+        public float priority;
         public T data;
 
-        public GenericPriorityQueueNode(int prio, T data)
+        public GenericPriorityQueueNode(float prio, T data)
         {
             this.priority = prio;
             this.data = data;
@@ -32,7 +32,19 @@ public class GenericPriorityQueue<T>
         }
     }
 
-    public void Insert(int prio, T data)
+    public bool Contains(T data)
+    {
+        foreach (GenericPriorityQueueNode node in heap)
+        {
+            if (EqualityComparer<T>.Default.Equals(node.data, data))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void Insert(float prio, T data)
     {
         GenericPriorityQueueNode node = new GenericPriorityQueueNode(prio, data);
         heap.Add(node);
@@ -48,7 +60,7 @@ public class GenericPriorityQueue<T>
         return result;
     }
 
-    public void Update(int i, int prio)
+    public void Update(int i, float prio)
     {
         heap[i].priority = prio;
         if (heap[(i - 1) / 2].priority > prio)
@@ -61,7 +73,7 @@ public class GenericPriorityQueue<T>
         }
     }
 
-    public void Update(T data, int prio)
+    public void Update(T data, float prio)
     {
         int index = 0;
         for (int i = 0; i < heap.Count; i++)
@@ -104,7 +116,7 @@ public class GenericPriorityQueue<T>
 
     private void sortDown(int i)
     {
-        while (i * 2 + 1 <= heap.Count)
+        while (i * 2 + 1 < heap.Count)
         {
             int mc = minChild(i);
             if (heap[i].priority > heap[mc].priority)
