@@ -157,7 +157,7 @@ public class GridMap : MonoBehaviour
     {
         GameObject gameObj = GameObject.Find("GridMap");
         Destroy(gameObj);
-        nodes = new Dictionary<Vector2, GridNode>();
+        nodes.Clear();
     }
 
     void Start()
