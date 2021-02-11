@@ -9,6 +9,7 @@ public class Player : Agent
     private float movementSpeed = 0.01f;
     private float timeToReachTarget = 1.0f;
     private float t = 0.0f;
+    private float walkDistance = 2.5f;
 
 
     override public void Movement()
@@ -28,6 +29,13 @@ public class Player : Agent
                 {
                     targetNode = null;
                 }
+                GameObject grid = GameObject.Find("Grid");
+                GridMap gridmap = grid.GetComponent<GridMap>();
+                gridmap.resetCircle();
+                Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
+                GridNode[] walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
+                //Debug.Log(walkCircle.Length);
+                gridmap.drawNodes(walkCircle);
                 t = 0.0f;
             }
         }
@@ -40,7 +48,12 @@ public class Player : Agent
     // Start is called before the first frame update
     void Start()
     {
-        
+        GameObject grid = GameObject.Find("Grid");
+        GridMap gridmap = grid.GetComponent<GridMap>();
+        Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
+        GridNode[] walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
+        Debug.Log(walkCircle.Length);
+        gridmap.drawNodes(walkCircle);
     }
 
     // Update is called once per frame

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -17,6 +18,17 @@ public class GridMap : MonoBehaviour
             temp.Add(node);
         }
         return temp.ToArray();
+    }
+
+    public static GridNode[] getGridNodesCircle(Vector2 position, float distance)
+    {
+        GridNode[] results =
+            (
+                from node in nodes.Values
+                where Vector2.Distance(node.Position, position) < distance
+                select node
+            ).ToArray();
+        return results;
     }
 
     public static GridNode getGridNode(Vector2 position)
@@ -153,6 +165,24 @@ public class GridMap : MonoBehaviour
         }
     }
 
+    public void drawNodes(GridNode[] circleNodes)
+    {
+        GameObject gameObj = new GameObject("GridMapCircle");
+        gameObj.AddComponent<TilemapRenderer>();
+        var tilemap = gameObj.GetComponent<Tilemap>();
+        gameObj.transform.SetParent(gameObject.transform);
+        foreach (GridNode node in circleNodes)
+        {
+            tilemap.SetTile(new Vector3Int((int)node.Position.x, (int)node.Position.y, 0), tile);
+        }
+    }
+
+    public void resetCircle()
+    {
+        GameObject gameObj = GameObject.Find("GridMapCircle");
+        Destroy(gameObj);
+    }
+
     public void resetNodes()
     {
         GameObject gameObj = GameObject.Find("GridMap");
@@ -168,7 +198,7 @@ public class GridMap : MonoBehaviour
         Tilemap obstaclemap = obstacle.GetComponent<Tilemap>();
         this.createDefinedMap(tilemap);
         removeNodes(obstaclemap);
-        this.drawNodes();
+        //this.drawNodes();
         //resetNodes();
     }
 }
