@@ -20,14 +20,14 @@ public class GridMap : MonoBehaviour
         return temp.ToArray();
     }
 
-    public static GridNode[] getGridNodesCircle(Vector2 position, float distance)
+    public static List<GridNode> getGridNodesCircle(Vector2 position, float distance)
     {
-        GridNode[] results =
+        List<GridNode> results =
             (
                 from node in nodes.Values
                 where Vector2.Distance(node.Position, position) < distance
                 select node
-            ).ToArray();
+            ).ToList();
         return results;
     }
 
@@ -165,7 +165,7 @@ public class GridMap : MonoBehaviour
         }
     }
 
-    public void drawNodes(GridNode[] circleNodes)
+    public void drawNodes(List<GridNode> circleNodes)
     {
         GameObject gameObj = new GameObject("GridMapCircle");
         gameObj.AddComponent<TilemapRenderer>();

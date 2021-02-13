@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Player : Agent
 {
     private List<GridNode> targetPath;
     private GridNode startNode, targetNode;
+    private List<GridNode> walkCircle;
     private float movementSpeed = 0.01f;
     private float timeToReachTarget = 1.0f;
     private float t = 0.0f;
@@ -18,6 +20,16 @@ public class Player : Agent
         {
             t += Time.deltaTime / timeToReachTarget;
             gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, targetNode.Position + new Vector2(0.5f, 0.5f), t);
+            if (t - 0.5f < 0.1f)
+            {
+                GameObject grid = GameObject.Find("Grid");
+                GridMap gridmap = grid.GetComponent<GridMap>();
+                gridmap.resetCircle();
+                Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
+                walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
+                //Debug.Log(walkCircle.Length);
+                gridmap.drawNodes(walkCircle);
+            }
             if (t >= 1.0f)
             {
                 if (targetPath.Count > 0)
@@ -29,13 +41,6 @@ public class Player : Agent
                 {
                     targetNode = null;
                 }
-                GameObject grid = GameObject.Find("Grid");
-                GridMap gridmap = grid.GetComponent<GridMap>();
-                gridmap.resetCircle();
-                Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
-                GridNode[] walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
-                //Debug.Log(walkCircle.Length);
-                gridmap.drawNodes(walkCircle);
                 t = 0.0f;
             }
         }
@@ -51,8 +56,7 @@ public class Player : Agent
         GameObject grid = GameObject.Find("Grid");
         GridMap gridmap = grid.GetComponent<GridMap>();
         Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
-        GridNode[] walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
-        Debug.Log(walkCircle.Length);
+        walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
         gridmap.drawNodes(walkCircle);
     }
 
@@ -68,7 +72,8 @@ public class Player : Agent
             Vector2 startPos = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
             GridNode start = GridMap.getGridNode(startPos);
             GridNode end = GridMap.getGridNode(adjustedPosition);
-            if (end != null)
+            walkCircle = GridMap.getGridNodesCircle(startPos, walkDistance);
+            if (walkCircle.Contains(end))
             {
                 targetPath = AStar.getPath(start, end);
                 //gameObject.transform.position = adjustedPosition;
