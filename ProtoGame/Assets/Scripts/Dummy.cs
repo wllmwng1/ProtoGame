@@ -25,9 +25,9 @@ public class Dummy : Agent
         return true;
     }
 
-    override public void Action()
+    override public bool Action()
     {
-
+        return true;
     }
 
     // Start is called before the first frame update
@@ -35,6 +35,9 @@ public class Dummy : Agent
     {
         currPhase = Phase.Decision;
         BattleManager.addAgent(this);
+        Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
+        GridNode position = GridMap.getGridNode(adjustedPosition);
+        position.placeAgent(this);
     }
 
     // Update is called once per frame

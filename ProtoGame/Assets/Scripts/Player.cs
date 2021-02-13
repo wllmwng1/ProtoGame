@@ -8,7 +8,7 @@ public class Player : Agent
     private List<GridNode> targetPath;
     private GridNode startNode, targetNode;
     private List<GridNode> walkCircle;
-    private float movementSpeed = 0.01f;
+    //private float movementSpeed = 0.01f;
     private float timeToReachTarget = 1.0f;
     private float t = 0.0f;
     private float walkDistance = 2.5f;
@@ -31,6 +31,9 @@ public class Player : Agent
             }
             if (t >= 1.0f)
             {
+                startNode.removeAgent();
+                startNode = targetNode;
+                startNode.placeAgent(this);
                 if (targetPath.Count > 0)
                 {
                     targetNode = targetPath[targetPath.Count - 1];
@@ -41,18 +44,47 @@ public class Player : Agent
                     walkCircle = GridMap.getGridNodesCircle(targetNode.Position, walkDistance);
                     gridmap.drawNodes(walkCircle);
                     targetNode = null;
-                    currPhase = Phase.Decision;
+                    currPhase = Phase.Action;
                     result = true;
                 }
+                Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
                 t = 0.0f;
             }
         }
         return result;
     }
 
-    override public void Action()
+    override public bool Action()
     {
-        
+        if (Input.GetMouseButtonDown(0))
+        {
+            Debug.Log("Action");
+            Vector3 mousePosition = Input.mousePosition;
+            mousePosition.z = Camera.main.nearClipPlane;
+            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(mousePosition);
+            Vector2 adjustedPosition = new Vector2(Mathf.Floor(worldPosition.x), Mathf.Floor(worldPosition.y));
+            Vector2 startPos = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
+            GridNode start = GridMap.getGridNode(startPos);
+            GridNode end = GridMap.getGridNode(adjustedPosition);
+            if (start.Neighbours.Contains(end) & end.Agent != null)
+            {
+                Debug.Log("Agent attacked another agent");
+            }
+            else
+            {
+                Debug.Log("No Action");
+            }
+            currPhase = Phase.Decision;
+            return true;
+            //Debug.Log(targetNode.Position);
+            //foreach (GridNode node in targetPath)
+            //{
+            //   Debug.Log(node.Position);
+            //}
+            //Debug.Log("End: " + end.Position);
+            //gameObject.transform.position = adjustedPosition + new Vector2(0.5f,0.5f);
+        }
+        return false;
     }
 
     override public bool Decision()
@@ -94,6 +126,8 @@ public class Player : Agent
         GameObject grid = GameObject.Find("Grid");
         GridMap gridmap = grid.GetComponent<GridMap>();
         Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
+        GridNode position = GridMap.getGridNode(adjustedPosition);
+        position.placeAgent(this);
         walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
         gridmap.drawNodes(walkCircle);
         currPhase = Phase.Decision;

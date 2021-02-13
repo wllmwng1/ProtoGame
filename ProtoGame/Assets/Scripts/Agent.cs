@@ -12,7 +12,7 @@ public abstract class Agent : MonoBehaviour
 
     public abstract bool Movement();
 
-    public abstract void Action();
+    public abstract bool Action();
 
     public abstract bool Decision();
 

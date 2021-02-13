@@ -28,7 +28,6 @@ public class BattleManager : MonoBehaviour
     void Update()
     {
         Agent currAgent = agents[0];
-        Agent.Phase currPhase = currAgent.currPhase;
         bool finishedPhase = false;
         switch(currAgent.currPhase)
         {
@@ -38,12 +37,20 @@ public class BattleManager : MonoBehaviour
             case Agent.Phase.Movement:
                 finishedPhase = currAgent.Movement();
                 break;
+            case Agent.Phase.Action:
+                finishedPhase = currAgent.Action();
+                break;
         }
-        if (finishedPhase & currPhase == Agent.Phase.Movement)
+        if (finishedPhase)
         {
-            agents.Remove(currAgent);
-            agents.Add(currAgent);
-            Debug.Log("Next Agent");
+            Debug.Log(currAgent.currPhase);
+            Agent.Phase currPhase = currAgent.currPhase;
+            if (currPhase == Agent.Phase.Decision)
+            {
+                agents.Remove(currAgent);
+                agents.Add(currAgent);
+                Debug.Log("Next Agent");
+            }
         }
     }
 }
