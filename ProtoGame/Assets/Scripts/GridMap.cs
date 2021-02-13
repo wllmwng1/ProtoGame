@@ -31,6 +31,23 @@ public class GridMap : MonoBehaviour
         return results;
     }
 
+    public static List<GridNode> getOuterCircle(List<GridNode> nodes)
+    {
+        List<GridNode> openSet = new List<GridNode>(nodes);
+        List<GridNode> result = new List<GridNode>(nodes);
+        foreach (GridNode node in openSet)
+        {
+            foreach (GridNode neighbour in node.Neighbours)
+            {
+                if (!result.Contains(neighbour))
+                {
+                    result.Add(neighbour);
+                }
+            }
+        }
+        return result;
+    }
+
     public static GridNode getGridNode(Vector2 position)
     {
         foreach (GridNode node in nodes.Values)

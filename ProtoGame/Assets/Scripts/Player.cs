@@ -13,22 +13,21 @@ public class Player : Agent
     private float t = 0.0f;
     private float walkDistance = 2.5f;
 
+    //public int getPhase { get { return (int)this.phase; } }
 
-    override public void Movement()
+    override public bool Movement()
     {
+        bool result = false;
         if (targetNode != null)
         {
+            GameObject grid = GameObject.Find("Grid");
+            GridMap gridmap = grid.GetComponent<GridMap>();
             t += Time.deltaTime / timeToReachTarget;
             gameObject.transform.position = Vector3.Lerp(gameObject.transform.position, targetNode.Position + new Vector2(0.5f, 0.5f), t);
             if (t - 0.5f < 0.1f)
             {
-                GameObject grid = GameObject.Find("Grid");
-                GridMap gridmap = grid.GetComponent<GridMap>();
                 gridmap.resetCircle();
                 Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
-                walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
-                //Debug.Log(walkCircle.Length);
-                gridmap.drawNodes(walkCircle);
             }
             if (t >= 1.0f)
             {
@@ -39,29 +38,24 @@ public class Player : Agent
                 }
                 else
                 {
+                    walkCircle = GridMap.getGridNodesCircle(targetNode.Position, walkDistance);
+                    gridmap.drawNodes(walkCircle);
                     targetNode = null;
+                    currPhase = Phase.Decision;
+                    result = true;
                 }
                 t = 0.0f;
             }
         }
+        return result;
     }
 
     override public void Action()
     {
         
     }
-    // Start is called before the first frame update
-    void Start()
-    {
-        GameObject grid = GameObject.Find("Grid");
-        GridMap gridmap = grid.GetComponent<GridMap>();
-        Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
-        walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
-        gridmap.drawNodes(walkCircle);
-    }
 
-    // Update is called once per frame
-    void Update()
+    override public bool Decision()
     {
         if (Input.GetMouseButtonDown(0))
         {
@@ -81,6 +75,8 @@ public class Player : Agent
                 targetNode = targetPath[targetPath.Count - 1];
                 targetPath.RemoveAt(targetPath.Count - 1);
             }
+            currPhase = Phase.Movement;
+            return true;
             //Debug.Log(targetNode.Position);
             //foreach (GridNode node in targetPath)
             //{
@@ -88,8 +84,25 @@ public class Player : Agent
             //}
             //Debug.Log("End: " + end.Position);
             //gameObject.transform.position = adjustedPosition + new Vector2(0.5f,0.5f);
-            
         }
-        Movement();
+        return false;
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        GameObject grid = GameObject.Find("Grid");
+        GridMap gridmap = grid.GetComponent<GridMap>();
+        Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
+        walkCircle = GridMap.getGridNodesCircle(adjustedPosition, walkDistance);
+        gridmap.drawNodes(walkCircle);
+        currPhase = Phase.Decision;
+        BattleManager.addAgent(this);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
     }
 }
