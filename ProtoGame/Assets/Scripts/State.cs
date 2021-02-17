@@ -8,7 +8,7 @@ public abstract class State
 
     public abstract Action executeAction();
 
-    public abstract State Update();
+    public abstract State Update(Agent agent);
 
     public abstract void onEnter();
 

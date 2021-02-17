@@ -17,9 +17,11 @@ public class Player : Agent
 
     override public bool Movement()
     {
-        bool result = false;
+        bool result = true;
+        //Debug.Log(targetNode);
         if (targetNode != null)
         {
+            result = false;
             GameObject grid = GameObject.Find("Grid");
             GridMap gridmap = grid.GetComponent<GridMap>();
             t += Time.deltaTime / timeToReachTarget;
@@ -51,6 +53,10 @@ public class Player : Agent
                 t = 0.0f;
             }
         }
+        else
+        {
+            currPhase = Phase.Action;
+        }
         return result;
     }
 
@@ -66,9 +72,16 @@ public class Player : Agent
             Vector2 startPos = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
             GridNode start = GridMap.getGridNode(startPos);
             GridNode end = GridMap.getGridNode(adjustedPosition);
-            if (start.Neighbours.Contains(end) & end.Agent != null)
+            if (end != null)
             {
-                Debug.Log("Agent attacked another agent");
+                if (start.Neighbours.Contains(end) & end.Agent != null)
+                {
+                    Debug.Log("Agent attacked another agent");
+                }
+                else
+                {
+                    Debug.Log("No Action");
+                }
             }
             else
             {
@@ -106,6 +119,10 @@ public class Player : Agent
                 startNode = start;
                 targetNode = targetPath[targetPath.Count - 1];
                 targetPath.RemoveAt(targetPath.Count - 1);
+            }
+            else
+            {
+                targetNode = null;
             }
             currPhase = Phase.Movement;
             return true;

@@ -6,6 +6,8 @@ public class BattleManager : MonoBehaviour
 {
     private static List<Agent> agents = new List<Agent>();
 
+    public static Agent[] getAgents { get { return agents.ToArray(); } }
+
     public static void addAgent(Agent agent)
     {
         agents.Add(agent);
@@ -49,7 +51,7 @@ public class BattleManager : MonoBehaviour
             {
                 agents.Remove(currAgent);
                 agents.Add(currAgent);
-                Debug.Log("Next Agent");
+                Debug.Log("Next Agent" + currAgent);
             }
         }
     }
