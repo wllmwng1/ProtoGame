@@ -52,6 +52,9 @@ public class BattleManager : MonoBehaviour
                 agents.Remove(currAgent);
                 agents.Add(currAgent);
                 Debug.Log("Next Agent" + currAgent);
+                GameObject gameObj = GameObject.Find("UI");
+                BattleUI ui = gameObj.GetComponent<BattleUI>();
+                ui.changeCurrAgent(agents[0]);
             }
         }
     }
