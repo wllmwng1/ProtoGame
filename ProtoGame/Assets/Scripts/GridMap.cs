@@ -4,78 +4,207 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class GridMap : MonoBehaviour
+public class GridMap : Observable<GridView>
 {
-    //Represents the gridMap based system on which we will be working on.
-    public TileBase tile;
-    private static Dictionary<Vector2, GridNode> nodes = new Dictionary<Vector2, GridNode>();
+    private Dictionary<Vector2, GridNode> nodes;
+    private GridView observer;
 
-    public static GridNode[] getGridNodes()
-    {
-        List<GridNode> temp = new List<GridNode>();
-        foreach (GridNode node in nodes.Values)
+    public Vector2[] getGridNodes 
+    { 
+        get 
         {
-            temp.Add(node);
+            return (from node in nodes.Values
+                    select node.Position).ToArray();
+        } 
+    }
+
+    public GridMap(Vector2[] addedLocations, Vector2[] removedLocations)
+    {
+        var locations = from add in addedLocations
+                        where !removedLocations.Contains(add)
+                        select add;
+        foreach (Vector2 location in locations)
+        {
+            this.addNode(location);
         }
-        return temp.ToArray();
+        this.assignNeighbours(nodes.Values.ToArray());
     }
 
-    public static List<GridNode> getGridNodesCircle(Vector2 position, float distance)
+    public void addNode(Vector2 _position)
     {
-        List<GridNode> results =
-            (
-                from node in nodes.Values
-                where Vector2.Distance(node.Position, position) < distance
-                select node
-            ).ToList();
-        return results;
-    }
-
-    public static List<GridNode> getOuterCircle(List<GridNode> nodes)
-    {
-        List<GridNode> openSet = new List<GridNode>(nodes);
-        List<GridNode> result = new List<GridNode>(nodes);
-        foreach (GridNode node in openSet)
+        if (!nodes.ContainsKey(_position))
         {
-            foreach (GridNode neighbour in node.Neighbours)
+            GridNode newNode = new GridNode(_position);
+            nodes.Add(_position, newNode);
+            this.assignNeighbours(new GridNode[] {newNode});
+        }
+        else
+        {
+            Debug.LogError("Map already has node at " + _position);
+        }
+    }
+
+    public void removeNode(Vector2 _position)
+    {
+        if (nodes.ContainsKey(_position))
+        {
+            this.removeNeighbours(new GridNode[] { nodes[_position] });
+            nodes.Remove(_position);
+        }
+        else
+        {
+            Debug.LogError("Map does not have node at" + _position);
+        }
+    }
+
+    public void connectNodes(Vector2 _position1, Vector2 _position2)
+    {
+        GridNode node1 = nodes[_position1];
+        GridNode node2 = nodes[_position2];
+        node1.addNeighbour(node2);
+        node2.addNeighbour(node1);
+    }
+
+    public void disconnectNodes(Vector2 _position1, Vector2 _position2)
+    {
+        GridNode node1 = nodes[_position1];
+        GridNode node2 = nodes[_position2];
+        node1.removeNeighbour(node2);
+        node2.removeNeighbour(node1);
+    }
+
+    public void assignNeighbours(GridNode[] nodes)
+    {
+        foreach (GridNode node in nodes)
+        {
+            var neighbours = from _node in nodes
+                             where _node.Position == node.Position + Vector2.up
+                             || _node.Position == node.Position + Vector2.down
+                             || _node.Position == node.Position + Vector2.right
+                             || _node.Position == node.Position + Vector2.left
+                             select _node;
+            foreach (GridNode neighbour in neighbours)
             {
-                if (!result.Contains(neighbour))
-                {
-                    result.Add(neighbour);
-                }
+                node.addNeighbour(neighbour);
             }
         }
-        return result;
     }
 
-    public static GridNode getGridNode(Vector2 position)
+    public void removeNeighbours(GridNode[] _nodes)
     {
-        foreach (GridNode node in nodes.Values)
+        foreach (GridNode node in _nodes)
         {
-            if (node.Position == position)
+            var neighbours = from _node in nodes.Values
+                             where node.Neighbours.Contains(_node)
+                             select _node;
+            foreach (GridNode neighbour in neighbours)
             {
-                return node;
+                neighbour.removeNeighbour(node);
             }
         }
-        return null;
     }
 
-    //Creates a rectangular GridMap with nodes based on length and width provided
-    public void createDefinedMap(int length, int width)
+    public void placeEntity(Entity _entity, Vector2 _position)
     {
-        for (int x = 0; x < length; x++)
-        {
-            for (int y = 0; y < width; y++)
-            {
-                nodes.Add(new Vector2(x,y), new GridNode(new Vector2(x,y)));
-            }
-        }
-
-        this.assignNeighbours(nodes);
+        nodes[_position].placeEntity(_entity);
     }
 
-    //Creates a GridMap with nodes based on the tilemap given. Will fill whole tilemap.
-    public void createDefinedMap(Tilemap tilemap)
+    public void removeEntity(Vector2 _position)
+    {
+        nodes[_position].removeEntity();
+    }
+
+    public void moveEntity(Entity _entity, Vector2 _position1, Vector2 _position2)
+    {
+        nodes[_position1].removeEntity();
+        nodes[_position2].placeEntity(_entity);
+    }
+
+    public void addTrigger(Trigger _trigger, Vector2 _position)
+    {
+        nodes[_position].addTrigger(_trigger);
+    }
+
+    public void removeTrigger(Trigger _trigger, Vector2 _position)
+    {
+        nodes[_position].removeTrigger(_trigger);
+    }
+
+    public void moveTrigger(Trigger _trigger, Vector2 _position1, Vector2 _position2)
+    {
+        nodes[_position1].removeTrigger(_trigger);
+        nodes[_position2].addTrigger(_trigger);
+    }
+
+    public void addTriggers(Trigger _trigger, Vector2[] _positions)
+    {
+        var valid = from node in nodes.Values
+                    from p in _positions
+                    where node.Position == p
+                    select node;
+        foreach (var node in valid)
+        {
+            node.addTrigger(_trigger);
+        }
+    }
+
+    public void removeTriggers(Trigger _trigger, Vector2[] _positions)
+    {
+        var valid = from node in nodes.Values
+                    from p in _positions
+                    where node.Position == p
+                    select node;
+        foreach (var node in valid)
+        {
+            node.removeTrigger(_trigger);
+        }
+    }
+
+    public void moveTriggers(Trigger _trigger, Vector2[] _positions, Vector2 offset)
+    {
+        var offsetPositions = from p in _positions
+                              select p + offset;
+        this.removeTriggers(_trigger, _positions);
+        this.addTriggers(_trigger, offsetPositions.ToArray());
+    }
+
+    public void subscribe(GridView _view)
+    {
+        if (observer == null)
+        {
+            observer = _view;
+        }
+        else
+        {
+            Debug.LogError("There is already a view subscribed");
+        }
+    }
+
+    public void unsubscribe(GridView _view)
+    {
+        if (observer == _view)
+        {
+            observer = null;
+        }
+        else
+        {
+            Debug.LogError("This view is not the subscribed view");
+        }
+    }
+}
+
+public class GridMapBuilder
+{
+    private List<Vector2> added, removed;
+    //private List<Vector2> removed;
+
+    public GridMapBuilder()
+    {
+        this.added = new List<Vector2>();
+        this.removed = new List<Vector2>();
+    }
+
+    public GridMapBuilder addTilemap(Tilemap tilemap)
     {
         BoundsInt bounds = tilemap.cellBounds;
         foreach (Vector3Int pos in tilemap.cellBounds.allPositionsWithin)
@@ -83,139 +212,28 @@ public class GridMap : MonoBehaviour
             Vector3Int tilepos = new Vector3Int(pos.x, pos.y, pos.z);
             if (tilemap.HasTile(tilepos))
             {
-                nodes.Add(new Vector2(pos.x, pos.y), new GridNode(new Vector2(pos.x, pos.y)));
+                this.added.Add(new Vector2(pos.x, pos.y));
             }
         }
-        this.assignNeighbours(nodes);
+        return this;
     }
 
-    public void removeNodes(int x, int y)
+    public GridMapBuilder removeTilemap(Tilemap tilemap)
     {
-        Vector2 loc = new Vector2(x, y);
-        List<GridNode> removed = new List<GridNode>();
-        if (nodes.ContainsKey(new Vector2(x, y)))
-        {
-            removed.Add(nodes[loc]);
-            nodes.Remove(loc);
-        }
-        this.removeNeighbours(removed);
-    }
-
-    public void removeNodes(int length, int width, int a, int b)
-    {
-        List<GridNode> removed = new List<GridNode>();
-        for (int x = 0; x < length; x++)
-        {
-            for (int y = 0; y < width; y++)
-            {
-                if (nodes.ContainsKey(new Vector2(x,y)))
-                {
-                    removed.Add(nodes[new Vector2(x + a, y + b)]);
-                    nodes.Remove(new Vector2(x, y));
-                }
-            }
-        }
-        this.removeNeighbours(removed);
-    }
-
-    public void removeNodes(Tilemap tilemap)
-    {
-        List<GridNode> removed = new List<GridNode>();
         BoundsInt bounds = tilemap.cellBounds;
         foreach (Vector3Int pos in tilemap.cellBounds.allPositionsWithin)
         {
             Vector3Int tilepos = new Vector3Int(pos.x, pos.y, pos.z);
-            if (tilemap.HasTile(tilepos) && nodes.ContainsKey(new Vector2(pos.x, pos.y)))
+            if (tilemap.HasTile(tilepos))
             {
-                removed.Add(nodes[new Vector2(pos.x,pos.y)]);
-                nodes.Remove(new Vector2(pos.x,pos.y));
+                this.removed.Add(new Vector2(pos.x, pos.y));
             }
         }
-        this.removeNeighbours(removed);
+        return this;
     }
 
-    //Assigns neighbours to the nodes.
-    private void assignNeighbours(Dictionary<Vector2,GridNode> nodes)
+    public GridMap create()
     {
-        foreach (KeyValuePair<Vector2, GridNode> kvp in nodes)
-        {
-            if (nodes.ContainsKey(kvp.Key + Vector2.right))
-            {
-                kvp.Value.addNeighbour(nodes[kvp.Key + Vector2.right]);
-            }
-            if (nodes.ContainsKey(kvp.Key + Vector2.left))
-            {
-                kvp.Value.addNeighbour(nodes[kvp.Key + Vector2.left]);
-            }
-            if (nodes.ContainsKey(kvp.Key + Vector2.up))
-            {
-                kvp.Value.addNeighbour(nodes[kvp.Key + Vector2.up]);
-            }
-            if (nodes.ContainsKey(kvp.Key + Vector2.down))
-            {
-                kvp.Value.addNeighbour(nodes[kvp.Key + Vector2.down]);
-            }
-        }
-    }
-
-    private void removeNeighbours(List<GridNode> nodes)
-    {
-        foreach (GridNode node in nodes)
-        {
-            foreach (GridNode neighbour in node.Neighbours)
-            {
-                neighbour.removeNeighbour(node);
-            }
-        }
-    }
-
-    //Draws the gridMap onto the scene using the provided TileBase tile.
-    public void drawNodes()
-    {
-        GameObject gameObj = new GameObject("GridMap");
-        gameObj.AddComponent<TilemapRenderer>();
-        var tilemap = gameObj.GetComponent<Tilemap>();
-        gameObj.transform.SetParent(gameObject.transform);
-        foreach (GridNode node in nodes.Values)
-        {
-            tilemap.SetTile(new Vector3Int((int)node.Position.x,(int)node.Position.y,0),tile);
-        }
-    }
-
-    public void drawNodes(List<GridNode> circleNodes)
-    {
-        GameObject gameObj = new GameObject("GridMapCircle");
-        gameObj.AddComponent<TilemapRenderer>();
-        var tilemap = gameObj.GetComponent<Tilemap>();
-        gameObj.transform.SetParent(gameObject.transform);
-        foreach (GridNode node in circleNodes)
-        {
-            tilemap.SetTile(new Vector3Int((int)node.Position.x, (int)node.Position.y, 0), tile);
-        }
-    }
-
-    public void resetCircle()
-    {
-        GameObject gameObj = GameObject.Find("GridMapCircle");
-        Destroy(gameObj);
-    }
-
-    public void resetNodes()
-    {
-        GameObject gameObj = GameObject.Find("GridMap");
-        Destroy(gameObj);
-        nodes = new Dictionary<Vector2, GridNode>();
-    }
-
-    void Start()
-    {
-        GameObject map = GameObject.Find("Map");
-        GameObject obstacle = GameObject.Find("Obstacle");
-        Tilemap tilemap = map.GetComponent<Tilemap>();
-        Tilemap obstaclemap = obstacle.GetComponent<Tilemap>();
-        this.createDefinedMap(tilemap);
-        removeNodes(obstaclemap);
-        //this.drawNodes();
-        //resetNodes();
+        return new GridMap(this.added.ToArray(), this.removed.ToArray());
     }
 }
