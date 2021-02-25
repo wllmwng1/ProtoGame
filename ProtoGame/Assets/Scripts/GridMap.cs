@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 
 public class GridMap : Observable<GridView>
 {
-    private Dictionary<Vector2, GridNode> nodes;
+    private Dictionary<Vector2, GridNode> nodes = new Dictionary<Vector2, GridNode>();
     private GridView observer;
 
     public Vector2[] getGridNodes 

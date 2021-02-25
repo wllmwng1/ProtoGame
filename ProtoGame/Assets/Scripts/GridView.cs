@@ -15,8 +15,9 @@ public class GridView : MonoBehaviour, Observer
     {
         _map.subscribe(this);
         map = _map;
+        locations = map.getGridNodes;
         tile = _tile;
-        drawMap = false;
+        drawMap = true;
         GameObject gameObj = new GameObject("GridMap");
         gameObj.AddComponent<TilemapRenderer>();
         tilemap = gameObj.GetComponent<Tilemap>();

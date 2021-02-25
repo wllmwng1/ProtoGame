@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BattleManager : MonoBehaviour
+public class OldBattleManager : MonoBehaviour
 {
     private static List<Agent> agents = new List<Agent>();
 
