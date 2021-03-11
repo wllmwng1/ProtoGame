@@ -10,7 +10,7 @@ public abstract class State
 
     public abstract State Update(Agent agent);
 
-    public abstract void onEnter();
+    public abstract void onEnter(Agent agent);
 
-    public abstract void onExit();
+    public abstract void onExit(Agent agent);
 }

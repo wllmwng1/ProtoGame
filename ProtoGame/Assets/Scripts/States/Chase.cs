@@ -4,6 +4,15 @@ using UnityEngine;
 
 public class Chase : State
 {
+    private int chaseTimer = 2;
+    private int currTime = 0;
+    private GridNode returnPosition;
+
+    public Chase(GridNode _returnPos)
+    {
+        this.returnPosition = _returnPos;
+    }
+
     public override GridNode executeMovement() 
     {
         foreach (Agent agent in BattleManager.getAgents)
@@ -23,10 +32,18 @@ public class Chase : State
 
     public override State Update(Agent self)
     {
-        return this;
+        currTime++;
+        if (currTime < chaseTimer)
+        {
+            return this;
+        }
+        else
+        {
+            return new Wander(returnPosition);
+        }
     }
 
-    public override void onExit() { }
+    public override void onExit(Agent self) { }
 
-    public override void onEnter() { }
+    public override void onEnter(Agent self) { }
 }

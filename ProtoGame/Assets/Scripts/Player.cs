@@ -11,7 +11,7 @@ public class Player : Agent
     //private float movementSpeed = 0.01f;
     private float timeToReachTarget = 1.0f;
     private float t = 0.0f;
-    private float walkDistance = 2.5f;
+    private float walkDistance = 4.5f;
 
     //public int getPhase { get { return (int)this.phase; } }
 

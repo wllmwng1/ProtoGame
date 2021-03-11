@@ -16,13 +16,14 @@ public class Standby : State
         {
             if (agent is Player & Vector2.Distance(agent.transform.position, self.transform.position) < distanceCheck)
             {
-                return new Chase();
+                Vector2 pos = new Vector2(self.transform.position.x, self.transform.position.y);
+                return new Chase(GridMap.getGridNode(pos));
             }
         }
         return this;  
     }
 
-    public override void onExit() { }
+    public override void onExit(Agent self) { }
 
-    public override void onEnter() { }
+    public override void onEnter(Agent self) { }
 }

@@ -7,6 +7,7 @@ public class Enemy : Agent
     private float t = 0.0f;
     private float timeToSpaceOut = 1.0f;
     private float timeToReachTarget = 1.0f;
+    private int stepCount = 3;
     private GridNode startNode, targetNode;
     private List<GridNode> targetPath;
     private Action targetAction;
@@ -17,6 +18,7 @@ public class Enemy : Agent
         t += Time.deltaTime / timeToSpaceOut;
         if (t > 1.0f)
         {
+            Debug.Log(currState);
             targetNode = currState.executeMovement();
             Vector2 startPos = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
             startNode = GridMap.getGridNode(startPos);
@@ -24,14 +26,16 @@ public class Enemy : Agent
             {
                 targetPath = AStar.getPath(startNode, targetNode);
                 targetNode = targetPath[targetPath.Count - 1];
-                targetPath.RemoveAt(targetPath.Count - 1);
+                int index = Mathf.Max(0, targetPath.Count - stepCount - 1);
+                int endIndex = Mathf.Min(targetPath.Count - index, stepCount);
+                targetPath = targetPath.GetRange(index,endIndex);
             }
             targetAction = currState.executeAction();
             State nextState = currState.Update(this);
             if (nextState != currState)
             {
-                currState.onExit();
-                nextState.onEnter();
+                currState.onExit(this);
+                nextState.onEnter(this);
                 currState = nextState;
             }
             currPhase = Phase.Movement;
@@ -98,7 +102,8 @@ public class Enemy : Agent
         Vector2 adjustedPosition = new Vector2(Mathf.Floor(gameObject.transform.position.x), Mathf.Floor(gameObject.transform.position.y));
         GridNode position = GridMap.getGridNode(adjustedPosition);
         position.placeAgent(this);
-        currState = new Standby();
+        currState = new Patrol();
+        currState.onEnter(this);
     }
 
     // Update is called once per frame
